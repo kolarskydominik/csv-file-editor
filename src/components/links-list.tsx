@@ -38,7 +38,7 @@ export function LinksList({ html, selectedLinkIndex, onLinkClick }: LinksListPro
             key={index}
             onClick={() => onLinkClick(link.href, index)}
             className={cn(
-              'w-full text-left p-3 hover:bg-accent transition-colors',
+              'w-full text-left p-3 hover:bg-accent/40 transition-colors',
               isSelected && 'bg-primary/10 border-l-4 border-l-primary'
             )}
           >
