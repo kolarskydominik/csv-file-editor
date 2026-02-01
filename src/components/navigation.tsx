@@ -1,3 +1,6 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+
 type NavigationProps = {
   currentRow: number | null
   currentLinkIndex: number
@@ -19,33 +22,37 @@ export function Navigation({
 }: NavigationProps) {
   return (
     <div className="flex items-center gap-2">
-      <button
+      <Button
+        variant="outline"
+        size="sm"
         onClick={onPrev}
         disabled={!hasPrev}
-        className="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
         title="Previous row with links"
       >
-        &larr; Prev
-      </button>
+        <ChevronLeft className="w-4 h-4" />
+        Prev
+      </Button>
 
-      <span className="text-sm text-gray-600 min-w-[120px] text-center">
+      <span className="text-sm text-muted-foreground min-w-[120px] text-center">
         {currentRow !== null ? (
           <>
             {currentLinkIndex >= 0 ? currentLinkIndex + 1 : '?'} / {totalLinkRows} with links
           </>
         ) : (
-          <span className="text-gray-400">No row selected</span>
+          <span className="text-muted-foreground/50">No row selected</span>
         )}
       </span>
 
-      <button
+      <Button
+        variant="outline"
+        size="sm"
         onClick={onNext}
         disabled={!hasNext}
-        className="px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
         title="Next row with links"
       >
-        Next &rarr;
-      </button>
+        Next
+        <ChevronRight className="w-4 h-4" />
+      </Button>
     </div>
   )
 }

@@ -1,4 +1,8 @@
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 
 type ColumnSelectorProps = {
   columns: string[]
@@ -38,54 +42,57 @@ export function ColumnSelector({
   }
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">Select Columns with Links</h2>
-      <p className="text-gray-500 mb-6">
-        <span className="font-medium">{fileName}</span> &middot; {totalRows.toLocaleString()} rows
-      </p>
+    <Card className="max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle>Select Columns with Links</CardTitle>
+        <CardDescription>
+          <span className="font-medium">{fileName}</span> &middot; {totalRows.toLocaleString()} rows
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <p className="text-sm text-muted-foreground">
+          Choose which columns contain HTML with links you want to edit:
+        </p>
 
-      <p className="text-sm text-gray-600 mb-4">
-        Choose which columns contain HTML with links you want to edit:
-      </p>
+        <div className="grid grid-cols-2 gap-2 max-h-80 overflow-auto">
+          {columns.map((col) => (
+            <div
+              key={col}
+              className={`
+                flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors
+                ${selected.has(col) ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/50'}
+              `}
+              onClick={() => toggleColumn(col)}
+            >
+              <Checkbox
+                id={`col-${col}`}
+                checked={selected.has(col)}
+                onCheckedChange={() => toggleColumn(col)}
+              />
+              <Label
+                htmlFor={`col-${col}`}
+                className="text-sm truncate cursor-pointer flex-1"
+                title={col}
+              >
+                {col}
+              </Label>
+            </div>
+          ))}
+        </div>
 
-      <div className="grid grid-cols-2 gap-2 mb-6 max-h-80 overflow-auto">
-        {columns.map((col) => (
-          <label
-            key={col}
-            className={`
-              flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors
-              ${selected.has(col) ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}
-            `}
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={onCancel} disabled={loading}>
+            Back
+          </Button>
+          <Button
+            onClick={handleConfirm}
+            disabled={selected.size === 0 || loading}
+            className="flex-1"
           >
-            <input
-              type="checkbox"
-              checked={selected.has(col)}
-              onChange={() => toggleColumn(col)}
-              className="w-4 h-4 text-blue-600 rounded"
-            />
-            <span className="text-sm truncate" title={col}>
-              {col}
-            </span>
-          </label>
-        ))}
-      </div>
-
-      <div className="flex gap-3">
-        <button
-          onClick={onCancel}
-          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
-          disabled={loading}
-        >
-          Back
-        </button>
-        <button
-          onClick={handleConfirm}
-          disabled={selected.size === 0 || loading}
-          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-        >
-          {loading ? 'Loading...' : `Continue with ${selected.size} column${selected.size !== 1 ? 's' : ''}`}
-        </button>
-      </div>
-    </div>
+            {loading ? 'Loading...' : `Continue with ${selected.size} column${selected.size !== 1 ? 's' : ''}`}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import { parseLinks } from '@/lib/link-parser'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 type LinksListProps = {
   html: string
@@ -12,13 +14,12 @@ export function LinksList({ html, selectedLinkIndex, onLinkClick }: LinksListPro
 
   if (links.length === 0) {
     return (
-      <div className="p-4 text-gray-400 text-sm italic">
+      <div className="p-4 text-muted-foreground text-sm italic">
         No links in this cell
       </div>
     )
   }
 
-  // Extract link text from the HTML for display
   const getTextAfterLink = (startIndex: number, endIndex: number, html: string) => {
     const afterTag = html.slice(endIndex)
     const closeTagIndex = afterTag.indexOf('</a>')
@@ -27,7 +28,7 @@ export function LinksList({ html, selectedLinkIndex, onLinkClick }: LinksListPro
   }
 
   return (
-    <div className="divide-y divide-gray-100">
+    <div className="divide-y divide-border">
       {links.map((link, index) => {
         const linkText = getTextAfterLink(link.startIndex, link.endIndex, html)
         const isSelected = index === selectedLinkIndex
@@ -36,22 +37,23 @@ export function LinksList({ html, selectedLinkIndex, onLinkClick }: LinksListPro
           <button
             key={index}
             onClick={() => onLinkClick(link.href, index)}
-            className={`w-full text-left p-3 hover:bg-gray-50 transition-colors ${
-              isSelected ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-            }`}
+            className={cn(
+              'w-full text-left p-3 hover:bg-accent transition-colors',
+              isSelected && 'bg-primary/10 border-l-4 border-l-primary'
+            )}
           >
             <div className="flex items-start gap-2">
-              <span className="text-xs text-gray-400 mt-0.5 shrink-0">
-                #{index + 1}
-              </span>
+              <Badge variant="secondary" className="shrink-0 mt-0.5">
+                {index + 1}
+              </Badge>
               <div className="min-w-0 flex-1">
                 {linkText && (
-                  <div className="text-sm font-medium text-gray-800 truncate mb-1" title={linkText}>
+                  <div className="text-sm font-medium text-foreground truncate mb-1" title={linkText}>
                     {linkText}
                   </div>
                 )}
                 <div
-                  className="text-xs text-blue-600 truncate font-mono"
+                  className="text-xs text-primary truncate font-mono"
                   title={link.href}
                 >
                   {link.href}

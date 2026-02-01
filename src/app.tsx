@@ -10,6 +10,18 @@ import { LinksList } from '@/components/links-list'
 import { useCSVData } from '@/hooks/use-csv-data'
 import { useLinkNavigation } from '@/hooks/use-link-navigation'
 import { replaceLinkHref, parseLinks } from '@/lib/link-parser'
+import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { X, FileText, Link as LinkIcon, Eye, Keyboard } from 'lucide-react'
 
 type SelectedLink = {
   href: string
@@ -135,22 +147,19 @@ export default function App() {
   // Step 1: No file uploaded - show drop zone
   if (!uploadResult) {
     return (
-      <div className="h-screen flex flex-col bg-gray-50">
-        <main className="flex-1 flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-lg border">
+      <div className="h-screen flex flex-col bg-background">
+        <main className="flex-1 flex items-center justify-center p-4">
+          <div>
             <FileDropZone onFileLoaded={uploadFile} loading={loading} />
             {error && (
-              <div className="px-8 pb-8">
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              <Alert variant="destructive" className="mt-4 max-w-xl mx-auto">
+                <AlertDescription className="flex items-center justify-between">
                   {error}
-                  <button
-                    onClick={clearError}
-                    className="ml-2 text-red-500 hover:text-red-700"
-                  >
-                    &times;
-                  </button>
-                </div>
-              </div>
+                  <Button variant="ghost" size="icon-xs" onClick={clearError}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </AlertDescription>
+              </Alert>
             )}
           </div>
         </main>
@@ -161,9 +170,9 @@ export default function App() {
   // Step 2: File uploaded, but columns not selected
   if (!metadata) {
     return (
-      <div className="h-screen flex flex-col bg-gray-50">
-        <main className="flex-1 flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-lg border">
+      <div className="h-screen flex flex-col bg-background">
+        <main className="flex-1 flex items-center justify-center p-4">
+          <div>
             <ColumnSelector
               columns={uploadResult.columns}
               fileName={uploadResult.fileName}
@@ -173,17 +182,14 @@ export default function App() {
               loading={loading}
             />
             {error && (
-              <div className="px-8 pb-8">
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              <Alert variant="destructive" className="mt-4 max-w-2xl mx-auto">
+                <AlertDescription className="flex items-center justify-between">
                   {error}
-                  <button
-                    onClick={clearError}
-                    className="ml-2 text-red-500 hover:text-red-700"
-                  >
-                    &times;
-                  </button>
-                </div>
-              </div>
+                  <Button variant="ghost" size="icon-xs" onClick={clearError}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </AlertDescription>
+              </Alert>
             )}
           </div>
         </main>
@@ -193,19 +199,16 @@ export default function App() {
 
   // Step 3: Ready to edit
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      <header className="border-b bg-white p-4 flex justify-between items-center shadow-sm">
+    <div className="h-screen flex flex-col bg-background">
+      <header className="border-b bg-card p-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold text-gray-800">CSV Link Editor</h1>
-          <span className="text-sm text-gray-500">
+          <h1 className="text-xl font-bold text-foreground">CSV Link Editor</h1>
+          <span className="text-sm text-muted-foreground">
             {metadata.totalRows.toLocaleString()} rows &middot; {metadata.fileName}
           </span>
-          <button
-            onClick={handleStartOver}
-            className="text-sm text-blue-600 hover:text-blue-800"
-          >
+          <Button variant="link" size="sm" onClick={handleStartOver}>
             Load different file
-          </button>
+          </Button>
         </div>
         <div className="flex gap-4 items-center">
           <Navigation
@@ -226,18 +229,21 @@ export default function App() {
       </header>
 
       {error && (
-        <div className="p-3 bg-red-50 border-b border-red-200 text-red-700 text-sm flex justify-between items-center">
-          <span>{error}</span>
-          <button onClick={clearError} className="text-red-500 hover:text-red-700">
-            &times;
-          </button>
-        </div>
+        <Alert variant="destructive" className="m-4">
+          <AlertDescription className="flex items-center justify-between">
+            {error}
+            <Button variant="ghost" size="icon-xs" onClick={clearError}>
+              <X className="w-4 h-4" />
+            </Button>
+          </AlertDescription>
+        </Alert>
       )}
 
       <main className="flex-1 flex overflow-hidden">
         {/* Left: Record List */}
-        <div className="w-72 border-r bg-white overflow-hidden flex flex-col shrink-0">
-          <div className="p-3 border-b bg-gray-50 text-sm font-medium text-gray-600">
+        <div className="w-72 border-r bg-card overflow-hidden flex flex-col shrink-0">
+          <div className="p-3 border-b bg-muted/50 text-sm font-medium text-muted-foreground flex items-center gap-2">
+            <FileText className="w-4 h-4" />
             Records ({metadata.totalRows.toLocaleString()})
           </div>
           <div className="flex-1 overflow-hidden">
@@ -256,37 +262,42 @@ export default function App() {
         </div>
 
         {/* Center: Preview */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-white min-w-0">
+        <div className="flex-1 flex flex-col overflow-hidden bg-card min-w-0">
           {selectedRow ? (
             <>
-              <div className="p-3 border-b bg-gray-50 flex items-center gap-4">
-                <label className="text-sm font-medium text-gray-600">Column:</label>
-                <select
-                  value={column}
-                  onChange={(e) => handleColumnChange(e.target.value)}
-                  className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {linkColumns.map((col) => (
-                    <option key={col} value={col}>
-                      {col}
-                    </option>
-                  ))}
-                </select>
-                <span className="text-xs text-gray-400">
-                  Use arrow keys to navigate
-                </span>
+              <div className="p-3 border-b bg-muted/50 flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Eye className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-muted-foreground">Column:</span>
+                </div>
+                <Select value={column} onValueChange={handleColumnChange}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select column" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {linkColumns.map((col) => (
+                      <SelectItem key={col} value={col}>
+                        {col}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Badge variant="outline" className="gap-1">
+                  <Keyboard className="w-3 h-3" />
+                  Arrow keys to navigate
+                </Badge>
               </div>
 
-              <div className="flex-1 overflow-auto p-6">
+              <ScrollArea className="flex-1 p-6">
                 <HtmlPreview
                   html={currentHtml}
                   onLinkClick={handleLinkClick}
                   selectedLinkIndex={selectedLink?.index}
                 />
-              </div>
+              </ScrollArea>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-400">
+            <div className="flex-1 flex items-center justify-center text-muted-foreground">
               <div className="text-center">
                 <p className="text-lg mb-2">Select a record to view</p>
                 <p className="text-sm">
@@ -298,11 +309,12 @@ export default function App() {
         </div>
 
         {/* Right: Links List */}
-        <div className="w-80 border-l bg-white overflow-hidden flex flex-col shrink-0">
-          <div className="p-3 border-b bg-gray-50 text-sm font-medium text-gray-600">
+        <div className="w-80 border-l bg-card overflow-hidden flex flex-col shrink-0">
+          <div className="p-3 border-b bg-muted/50 text-sm font-medium text-muted-foreground flex items-center gap-2">
+            <LinkIcon className="w-4 h-4" />
             Links ({linksInCurrentContent})
           </div>
-          <div className="flex-1 overflow-auto">
+          <ScrollArea className="flex-1">
             {selectedRow ? (
               <LinksList
                 html={currentHtml}
@@ -310,11 +322,11 @@ export default function App() {
                 onLinkClick={handleLinkClick}
               />
             ) : (
-              <div className="p-4 text-gray-400 text-sm italic">
+              <div className="p-4 text-muted-foreground text-sm italic">
                 Select a record to see links
               </div>
             )}
-          </div>
+          </ScrollArea>
         </div>
       </main>
 
