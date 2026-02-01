@@ -147,7 +147,7 @@ export default function App() {
   // Step 1: No file uploaded - show drop zone
   if (!uploadResult) {
     return (
-      <div className="h-screen flex flex-col bg-background">
+      <div className="h-svh flex flex-col bg-background">
         <main className="flex-1 flex items-center justify-center p-4">
           <div>
             <FileDropZone onFileLoaded={uploadFile} loading={loading} />
