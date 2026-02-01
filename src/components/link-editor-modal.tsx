@@ -110,7 +110,7 @@ export function LinkEditorModal({
 
 				<DialogFooter className="flex items-center justify-between">
 					<div className="flex gap-2 mr-auto">
-						{isRelativePath ? (
+						{isRelativePath && (
 							<Button
 								variant="link"
 								onClick={handleTestRelativePath}
@@ -119,7 +119,8 @@ export function LinkEditorModal({
 								<ExternalLink className="size-4" />
 								TEST: BT Relative Path
 							</Button>
-						) : (
+						)}
+						{isValidUrl && (
 							<Button
 								variant="link"
 								onClick={handleOpenInNewTab}
