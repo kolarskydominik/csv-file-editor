@@ -1,10 +1,12 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { RecordList } from '@/components/record-list'
 import { HtmlPreview } from '@/components/html-preview'
 import { LinkEditorModal } from '@/components/link-editor-modal'
 import { Navigation } from '@/components/navigation'
-import { SaveButton } from '@/components/save-button'
-import { FileLoader } from '@/components/file-loader'
+import { DownloadButton } from '@/components/download-button'
+import { FileDropZone } from '@/components/file-drop-zone'
+import { ColumnSelector } from '@/components/column-selector'
+import { LinksList } from '@/components/links-list'
 import { useCSVData } from '@/hooks/use-csv-data'
 import { useLinkNavigation } from '@/hooks/use-link-navigation'
 import { replaceLinkHref, parseLinks } from '@/lib/link-parser'
@@ -16,20 +18,22 @@ type SelectedLink = {
 
 export default function App() {
   const {
+    uploadResult,
     metadata,
     rows,
     loading,
     error,
-    loadFile,
+    uploadFile,
+    selectColumns,
+    reset,
     loadRows,
     updateCell,
-    save,
     clearError,
   } = useCSVData()
 
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null)
   const [selectedLink, setSelectedLink] = useState<SelectedLink | null>(null)
-  const [column, setColumn] = useState<string>('Content')
+  const [column, setColumn] = useState<string>('')
 
   const {
     currentLinkIndex,
@@ -40,6 +44,13 @@ export default function App() {
     hasPrev,
     refreshLinkRows,
   } = useLinkNavigation(selectedRowIndex)
+
+  // Set initial column when metadata loads
+  useEffect(() => {
+    if (metadata?.linkColumns?.length && !column) {
+      setColumn(metadata.linkColumns[0])
+    }
+  }, [metadata, column])
 
   const selectedRow = selectedRowIndex !== null ? rows.get(selectedRowIndex) : null
 
@@ -84,27 +95,53 @@ export default function App() {
     setSelectedLink(null)
   }, [])
 
+  const handleStartOver = useCallback(() => {
+    setSelectedRowIndex(null)
+    setSelectedLink(null)
+    setColumn('')
+    reset()
+  }, [reset])
+
+  // Keyboard navigation - arrow keys for prev/next record
+  useEffect(() => {
+    if (!metadata || selectedLink !== null) return // Don't navigate when modal is open
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept when typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return
+      }
+
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault()
+        handlePrev()
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault()
+        handleNext()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [metadata, selectedLink, handlePrev, handleNext])
+
   // Get available link columns from metadata
-  const linkColumns = metadata?.linkColumns || ['Content', 'Content 2']
+  const linkColumns = metadata?.linkColumns || []
 
   // Count links in current content
   const currentHtml = selectedRow?.[column] || ''
   const linksInCurrentContent = parseLinks(currentHtml).length
 
-  // If no file loaded, show file loader
-  if (!metadata) {
+  // Step 1: No file uploaded - show drop zone
+  if (!uploadResult) {
     return (
       <div className="h-screen flex flex-col bg-gray-50">
-        <header className="border-b bg-white p-4">
-          <h1 className="text-xl font-bold text-gray-800">CSV Link Editor</h1>
-        </header>
-
         <main className="flex-1 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-lg border">
-            <FileLoader onLoad={loadFile} loading={loading} />
+          <div className="bg-white rounded-xl shadow-lg border">
+            <FileDropZone onFileLoaded={uploadFile} loading={loading} />
             {error && (
-              <div className="px-6 pb-6">
-                <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+              <div className="px-8 pb-8">
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                   {error}
                   <button
                     onClick={clearError}
@@ -121,14 +158,54 @@ export default function App() {
     )
   }
 
+  // Step 2: File uploaded, but columns not selected
+  if (!metadata) {
+    return (
+      <div className="h-screen flex flex-col bg-gray-50">
+        <main className="flex-1 flex items-center justify-center">
+          <div className="bg-white rounded-xl shadow-lg border">
+            <ColumnSelector
+              columns={uploadResult.columns}
+              fileName={uploadResult.fileName}
+              totalRows={uploadResult.totalRows}
+              onConfirm={selectColumns}
+              onCancel={handleStartOver}
+              loading={loading}
+            />
+            {error && (
+              <div className="px-8 pb-8">
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  {error}
+                  <button
+                    onClick={clearError}
+                    className="ml-2 text-red-500 hover:text-red-700"
+                  >
+                    &times;
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // Step 3: Ready to edit
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       <header className="border-b bg-white p-4 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-4">
           <h1 className="text-xl font-bold text-gray-800">CSV Link Editor</h1>
           <span className="text-sm text-gray-500">
-            {metadata.totalRows.toLocaleString()} rows &middot; {metadata.filePath}
+            {metadata.totalRows.toLocaleString()} rows &middot; {metadata.fileName}
           </span>
+          <button
+            onClick={handleStartOver}
+            className="text-sm text-blue-600 hover:text-blue-800"
+          >
+            Load different file
+          </button>
         </div>
         <div className="flex gap-4 items-center">
           <Navigation
@@ -140,10 +217,10 @@ export default function App() {
             onPrev={handlePrev}
             onNext={handleNext}
           />
-          <SaveButton
-            onSave={save}
+          <DownloadButton
             isDirty={metadata.isDirty}
             dirtyCount={metadata.dirtyCount}
+            fileName={metadata.fileName}
           />
         </div>
       </header>
@@ -159,7 +236,7 @@ export default function App() {
 
       <main className="flex-1 flex overflow-hidden">
         {/* Left: Record List */}
-        <div className="w-80 border-r bg-white overflow-hidden flex flex-col">
+        <div className="w-72 border-r bg-white overflow-hidden flex flex-col shrink-0">
           <div className="p-3 border-b bg-gray-50 text-sm font-medium text-gray-600">
             Records ({metadata.totalRows.toLocaleString()})
           </div>
@@ -178,8 +255,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* Right: Preview + Editor */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-white">
+        {/* Center: Preview */}
+        <div className="flex-1 flex flex-col overflow-hidden bg-white min-w-0">
           {selectedRow ? (
             <>
               <div className="p-3 border-b bg-gray-50 flex items-center gap-4">
@@ -195,8 +272,8 @@ export default function App() {
                     </option>
                   ))}
                 </select>
-                <span className="text-sm text-gray-500">
-                  {linksInCurrentContent} link{linksInCurrentContent !== 1 ? 's' : ''} in this cell
+                <span className="text-xs text-gray-400">
+                  Use arrow keys to navigate
                 </span>
               </div>
 
@@ -207,18 +284,37 @@ export default function App() {
                   selectedLinkIndex={selectedLink?.index}
                 />
               </div>
-
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-gray-400">
               <div className="text-center">
                 <p className="text-lg mb-2">Select a record to view</p>
                 <p className="text-sm">
-                  or use the navigation buttons to jump to rows with links
+                  or use arrow keys / navigation buttons
                 </p>
               </div>
             </div>
           )}
+        </div>
+
+        {/* Right: Links List */}
+        <div className="w-80 border-l bg-white overflow-hidden flex flex-col shrink-0">
+          <div className="p-3 border-b bg-gray-50 text-sm font-medium text-gray-600">
+            Links ({linksInCurrentContent})
+          </div>
+          <div className="flex-1 overflow-auto">
+            {selectedRow ? (
+              <LinksList
+                html={currentHtml}
+                selectedLinkIndex={selectedLink?.index}
+                onLinkClick={handleLinkClick}
+              />
+            ) : (
+              <div className="p-4 text-gray-400 text-sm italic">
+                Select a record to see links
+              </div>
+            )}
+          </div>
         </div>
       </main>
 

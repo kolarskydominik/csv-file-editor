@@ -1,5 +1,4 @@
 import Papa from 'papaparse'
-import fs from 'fs/promises'
 
 export type CSVRow = {
   [key: string]: string
@@ -8,12 +7,12 @@ export type CSVRow = {
 class CSVManager {
   private data: CSVRow[] = []
   private columns: string[] = []
-  private filePath: string = ''
+  private fileName: string = ''
   private dirtyRows: Set<number> = new Set()
 
-  async load(filePath: string): Promise<void> {
-    this.filePath = filePath
-    const content = await fs.readFile(filePath, 'utf-8')
+  // Load from CSV content string (for drag-and-drop upload)
+  loadFromContent(content: string, fileName: string): void {
+    this.fileName = fileName
 
     const result = Papa.parse<CSVRow>(content, {
       header: true,
@@ -49,26 +48,9 @@ class CSVManager {
     return false
   }
 
-  async save(): Promise<void> {
-    const csv = Papa.unparse(this.data, { columns: this.columns })
-    const tempPath = this.filePath + '.tmp'
-    const backupPath = this.filePath + '.bak'
-
-    // Write to temp file
-    await fs.writeFile(tempPath, csv, 'utf-8')
-
-    // Create backup of original
-    try {
-      await fs.copyFile(this.filePath, backupPath)
-    } catch {
-      // Original might not exist on first save
-    }
-
-    // Atomic rename
-    await fs.rename(tempPath, this.filePath)
-
-    // Clear dirty state
-    this.dirtyRows.clear()
+  // Export as CSV string (for download)
+  exportCSV(): string {
+    return Papa.unparse(this.data, { columns: this.columns })
   }
 
   get totalRows(): number {
@@ -87,8 +69,8 @@ class CSVManager {
     return this.columns
   }
 
-  get loadedFilePath(): string {
-    return this.filePath
+  get loadedFileName(): string {
+    return this.fileName
   }
 }
 

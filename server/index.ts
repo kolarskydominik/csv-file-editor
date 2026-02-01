@@ -5,35 +5,54 @@ import { buildLinkIndex, findNextLinkRow, findPrevLinkRow } from './link-index'
 
 const app = express()
 app.use(cors())
-app.use(express.json())
+app.use(express.json({ limit: '50mb' })) // Allow large CSV uploads
 
 let linkIndex: number[] = []
 let linkColumns: string[] = []
 
-// GET /api/load - Load a CSV file
-app.post('/api/load', async (req, res) => {
-  const { filePath, columns } = req.body as { filePath: string; columns?: string[] }
+// POST /api/upload - Upload CSV content
+app.post('/api/upload', (req, res) => {
+  const { content, fileName } = req.body as { content: string; fileName: string }
 
-  if (!filePath) {
-    res.status(400).json({ error: 'filePath is required' })
+  if (!content) {
+    res.status(400).json({ error: 'content is required' })
     return
   }
 
   try {
-    await csvManager.load(filePath)
-    linkColumns = columns || ['Content', 'Content 2']
-    linkIndex = buildLinkIndex(csvManager.getAllData(), linkColumns)
+    csvManager.loadFromContent(content, fileName || 'uploaded.csv')
+    // Don't set link columns yet - wait for user to select
+    linkColumns = []
+    linkIndex = []
 
     res.json({
       success: true,
       totalRows: csvManager.totalRows,
       columns: csvManager.columnNames,
-      totalLinksRows: linkIndex.length,
-      linkColumns,
+      fileName: csvManager.loadedFileName,
     })
   } catch (error) {
-    res.status(500).json({ error: `Failed to load file: ${error}` })
+    res.status(500).json({ error: `Failed to parse CSV: ${error}` })
   }
+})
+
+// POST /api/set-link-columns - Set which columns contain links
+app.post('/api/set-link-columns', (req, res) => {
+  const { columns } = req.body as { columns: string[] }
+
+  if (!columns || columns.length === 0) {
+    res.status(400).json({ error: 'columns array is required' })
+    return
+  }
+
+  linkColumns = columns
+  linkIndex = buildLinkIndex(csvManager.getAllData(), linkColumns)
+
+  res.json({
+    success: true,
+    totalLinksRows: linkIndex.length,
+    linkColumns,
+  })
 })
 
 // GET /api/metadata
@@ -44,7 +63,7 @@ app.get('/api/metadata', (_req, res) => {
     totalLinksRows: linkIndex.length,
     isDirty: csvManager.isDirty,
     dirtyCount: csvManager.dirtyCount,
-    filePath: csvManager.loadedFilePath,
+    fileName: csvManager.loadedFileName,
     linkColumns,
   })
 })
@@ -89,14 +108,14 @@ app.patch('/api/row/:index', (req, res) => {
   }
 })
 
-// POST /api/save
-app.post('/api/save', async (_req, res) => {
-  try {
-    await csvManager.save()
-    res.json({ success: true })
-  } catch (error) {
-    res.status(500).json({ error: `Failed to save: ${error}` })
-  }
+// GET /api/download - Download modified CSV
+app.get('/api/download', (_req, res) => {
+  const csv = csvManager.exportCSV()
+  const fileName = csvManager.loadedFileName.replace('.csv', '-modified.csv')
+
+  res.setHeader('Content-Type', 'text/csv')
+  res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`)
+  res.send(csv)
 })
 
 // GET /api/links/next?from=0
@@ -122,5 +141,5 @@ const PORT = process.env.PORT || 3001
 
 app.listen(PORT, () => {
   console.log(`CSV Editor API running on http://localhost:${PORT}`)
-  console.log('Use POST /api/load with { filePath: "..." } to load a CSV file')
+  console.log('Drag and drop a CSV file to start editing')
 })

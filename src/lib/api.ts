@@ -6,7 +6,7 @@ export type Metadata = {
   totalLinksRows: number
   isDirty: boolean
   dirtyCount: number
-  filePath: string
+  fileName: string
   linkColumns: string[]
 }
 
@@ -15,24 +15,37 @@ export type RowData = {
   data: Record<string, string>
 }
 
-export async function loadCSV(
-  filePath: string,
-  columns?: string[]
-): Promise<{
+export type UploadResult = {
   success: boolean
   totalRows: number
   columns: string[]
-  totalLinksRows: number
-  linkColumns: string[]
-}> {
-  const res = await fetch(`${API_BASE}/load`, {
+  fileName: string
+}
+
+export async function uploadCSV(content: string, fileName: string): Promise<UploadResult> {
+  const res = await fetch(`${API_BASE}/upload`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ filePath, columns }),
+    body: JSON.stringify({ content, fileName }),
   })
   if (!res.ok) {
     const error = await res.json()
-    throw new Error(error.error || 'Failed to load CSV')
+    throw new Error(error.error || 'Failed to upload CSV')
+  }
+  return res.json()
+}
+
+export async function setLinkColumns(
+  columns: string[]
+): Promise<{ success: boolean; totalLinksRows: number; linkColumns: string[] }> {
+  const res = await fetch(`${API_BASE}/set-link-columns`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ columns }),
+  })
+  if (!res.ok) {
+    const error = await res.json()
+    throw new Error(error.error || 'Failed to set columns')
   }
   return res.json()
 }
@@ -72,13 +85,8 @@ export async function updateRow(
   return res.json()
 }
 
-export async function saveCSV(): Promise<{ success: boolean }> {
-  const res = await fetch(`${API_BASE}/save`, { method: 'POST' })
-  if (!res.ok) {
-    const error = await res.json()
-    throw new Error(error.error || 'Failed to save')
-  }
-  return res.json()
+export function getDownloadUrl(): string {
+  return `${API_BASE}/download`
 }
 
 export async function getNextLinkRow(fromRow: number): Promise<number | null> {

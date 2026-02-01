@@ -1,26 +1,55 @@
 import { useState, useCallback } from 'react'
 import * as api from '@/lib/api'
-import type { Metadata } from '@/lib/api'
+import type { Metadata, UploadResult } from '@/lib/api'
 
 export function useCSVData() {
+  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null)
   const [metadata, setMetadata] = useState<Metadata | null>(null)
   const [rows, setRows] = useState<Map<number, Record<string, string>>>(new Map())
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const loadFile = useCallback(async (filePath: string, columns?: string[]) => {
+  // Step 1: Upload file content
+  const uploadFile = useCallback(async (content: string, fileName: string) => {
     setLoading(true)
     setError(null)
     try {
-      await api.loadCSV(filePath, columns)
-      const meta = await api.getMetadata()
-      setMetadata(meta)
+      const result = await api.uploadCSV(content, fileName)
+      setUploadResult(result)
+      setMetadata(null) // Reset metadata until columns are selected
       setRows(new Map())
+      return result
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load file')
+      setError(err instanceof Error ? err.message : 'Failed to upload file')
+      return null
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  // Step 2: Set which columns contain links
+  const selectColumns = useCallback(async (columns: string[]) => {
+    setLoading(true)
+    setError(null)
+    try {
+      await api.setLinkColumns(columns)
+      const meta = await api.getMetadata()
+      setMetadata(meta)
+      return true
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to set columns')
+      return false
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  // Reset to start over
+  const reset = useCallback(() => {
+    setUploadResult(null)
+    setMetadata(null)
+    setRows(new Map())
+    setError(null)
   }, [])
 
   const loadRows = useCallback(async (start: number, count: number) => {
@@ -67,17 +96,6 @@ export function useCSVData() {
     []
   )
 
-  const save = useCallback(async () => {
-    try {
-      await api.saveCSV()
-      setMetadata((prev) => (prev ? { ...prev, isDirty: false, dirtyCount: 0 } : null))
-      return true
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save')
-      return false
-    }
-  }, [])
-
   const refreshMetadata = useCallback(async () => {
     try {
       const meta = await api.getMetadata()
@@ -88,14 +106,16 @@ export function useCSVData() {
   }, [])
 
   return {
+    uploadResult,
     metadata,
     rows,
     loading,
     error,
-    loadFile,
+    uploadFile,
+    selectColumns,
+    reset,
     loadRows,
     updateCell,
-    save,
     refreshMetadata,
     clearError: () => setError(null),
   }
