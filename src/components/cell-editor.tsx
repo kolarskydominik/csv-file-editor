@@ -55,6 +55,7 @@ export function CellEditor({
 	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const lastContentRef = useRef(content);
 	const editorContainerRef = useRef<HTMLElement>(null);
+	const isUpdatingProgrammaticallyRef = useRef(false);
 
 	const editor = useEditor({
 		extensions: [
@@ -76,6 +77,11 @@ export function CellEditor({
 		content,
 		editable: !disabled,
 		onUpdate: ({ editor }) => {
+			// Don't trigger onChange if we're programmatically updating content
+			if (isUpdatingProgrammaticallyRef.current) {
+				return;
+			}
+
 			const html = editor.getHTML();
 
 			// Debounce the onChange call
@@ -95,8 +101,15 @@ export function CellEditor({
 	// Update editor content when external content changes
 	useEffect(() => {
 		if (editor && content !== lastContentRef.current) {
+			isUpdatingProgrammaticallyRef.current = true;
 			lastContentRef.current = content;
 			editor.commands.setContent(content);
+			// Reset flag after editor update completes
+			// Use a small timeout to ensure onUpdate handler has finished if it fires synchronously
+			const timeoutId = setTimeout(() => {
+				isUpdatingProgrammaticallyRef.current = false;
+			}, 10);
+			return () => clearTimeout(timeoutId);
 		}
 	}, [content, editor]);
 

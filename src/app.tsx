@@ -224,6 +224,13 @@ export default function App() {
 		async (html: string) => {
 			if (selectedRowIndex === null || !column) return;
 
+			// Check if content actually changed before saving
+			const currentContent = selectedRow?.[column] || "";
+			if (html === currentContent) {
+				// Content hasn't changed, don't save
+				return;
+			}
+
 			setEditorContent(html);
 			setIsSaving(true);
 
@@ -241,7 +248,7 @@ export default function App() {
 				setIsSaving(false);
 			}, 100);
 		},
-		[selectedRowIndex, column, updateCell, refreshLinkRows],
+		[selectedRowIndex, column, selectedRow, updateCell, refreshLinkRows],
 	);
 
 	// Cleanup save timeout on unmount
