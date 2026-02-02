@@ -1,9 +1,17 @@
-import { Edit3, FileText, Keyboard, Link as LinkIcon, X } from "lucide-react";
+import {
+	Edit3,
+	FileText,
+	Info,
+	Keyboard,
+	Link as LinkIcon,
+	X,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CellEditor } from "@/components/cell-editor";
 import { ChangesViewer } from "@/components/changes-viewer";
 import { ColumnSelector } from "@/components/column-selector";
 import { DownloadButton } from "@/components/download-button";
+import { FeaturesModal } from "@/components/features-modal";
 import { FileDropZone } from "@/components/file-drop-zone";
 import { LinkEditorModal } from "@/components/link-editor-modal";
 import { LinksList } from "@/components/links-list";
@@ -55,6 +63,7 @@ export default function App() {
 	const [column, setColumn] = useState<string>("");
 	const [editorContent, setEditorContent] = useState<string>("");
 	const [isSaving, setIsSaving] = useState(false);
+	const [isFeaturesModalOpen, setIsFeaturesModalOpen] = useState(false);
 	const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const {
@@ -268,6 +277,21 @@ export default function App() {
 	if (!uploadResult) {
 		return (
 			<div className="h-svh flex flex-col bg-background">
+				<header className="border-b bg-card p-4 flex justify-end items-center">
+					<div className="flex gap-4 items-center">
+						<Button
+							variant="outline"
+							size="icon-sm"
+							onClick={() => setIsFeaturesModalOpen(true)}
+							title="View features guide"
+							aria-label="View features guide"
+						>
+							<Info className="h-4 w-4" />
+							<span className="sr-only">Features guide</span>
+						</Button>
+						<ThemeToggle />
+					</div>
+				</header>
 				<main className="flex-1 flex items-center justify-center p-4">
 					<div>
 						<FileDropZone onFileLoaded={uploadFile} loading={loading} />
@@ -283,6 +307,10 @@ export default function App() {
 						)}
 					</div>
 				</main>
+				<FeaturesModal
+					isOpen={isFeaturesModalOpen}
+					onClose={() => setIsFeaturesModalOpen(false)}
+				/>
 			</div>
 		);
 	}
@@ -291,6 +319,21 @@ export default function App() {
 	if (!metadata) {
 		return (
 			<div className="h-svh flex flex-col bg-background">
+				<header className="border-b bg-card p-4 flex justify-end items-center">
+					<div className="flex gap-4 items-center">
+						<Button
+							variant="outline"
+							size="icon-sm"
+							onClick={() => setIsFeaturesModalOpen(true)}
+							title="View features guide"
+							aria-label="View features guide"
+						>
+							<Info className="h-4 w-4" />
+							<span className="sr-only">Features guide</span>
+						</Button>
+						<ThemeToggle />
+					</div>
+				</header>
 				<main className="flex-1 flex items-center justify-center p-4">
 					<div>
 						<ColumnSelector
@@ -313,6 +356,10 @@ export default function App() {
 						)}
 					</div>
 				</main>
+				<FeaturesModal
+					isOpen={isFeaturesModalOpen}
+					onClose={() => setIsFeaturesModalOpen(false)}
+				/>
 			</div>
 		);
 	}
@@ -355,6 +402,16 @@ export default function App() {
 						dirtyCount={metadata.dirtyCount}
 						fileName={metadata.fileName}
 					/>
+					<Button
+						variant="outline"
+						size="icon-sm"
+						onClick={() => setIsFeaturesModalOpen(true)}
+						title="View features guide"
+						aria-label="View features guide"
+					>
+						<Info className="h-4 w-4" />
+						<span className="sr-only">Features guide</span>
+					</Button>
 					<ThemeToggle />
 				</div>
 			</header>
@@ -479,6 +536,12 @@ export default function App() {
 				href={selectedLink?.href || ""}
 				onSave={handleLinkSave}
 				onClose={() => setSelectedLink(null)}
+			/>
+
+			{/* Features Modal */}
+			<FeaturesModal
+				isOpen={isFeaturesModalOpen}
+				onClose={() => setIsFeaturesModalOpen(false)}
 			/>
 		</div>
 	);
