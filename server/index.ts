@@ -154,6 +154,12 @@ app.get("/api/links/all", (_req, res) => {
 	res.json({ rowIndices: linkIndex });
 });
 
+// GET /api/changes - Get all cell changes made in this session
+app.get("/api/changes", (_req, res) => {
+	const changes = csvManager.getChanges();
+	res.json({ changes });
+});
+
 // Serve React app for all non-API routes (production)
 // Express 5 doesn't support app.get('*'), so we use app.use() with a catch-all
 if (process.env.NODE_ENV === "production") {

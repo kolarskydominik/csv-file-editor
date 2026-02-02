@@ -1,6 +1,7 @@
 import { Edit3, FileText, Keyboard, Link as LinkIcon, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CellEditor } from "@/components/cell-editor";
+import { ChangesViewer } from "@/components/changes-viewer";
 import { ColumnSelector } from "@/components/column-selector";
 import { DownloadButton } from "@/components/download-button";
 import { FileDropZone } from "@/components/file-drop-zone";
@@ -344,6 +345,10 @@ export default function App() {
 						hasPrev={hasPrev}
 						onPrev={handlePrev}
 						onNext={handleNext}
+					/>
+					<ChangesViewer
+						isDirty={metadata.isDirty}
+						dirtyCount={metadata.dirtyCount}
 					/>
 					<DownloadButton
 						isDirty={metadata.isDirty}
