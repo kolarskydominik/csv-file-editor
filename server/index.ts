@@ -155,8 +155,15 @@ app.get("/api/links/all", (_req, res) => {
 });
 
 // Serve React app for all non-API routes (production)
+// Express 5 doesn't support app.get('*'), so we use app.use() with a catch-all
 if (process.env.NODE_ENV === "production") {
-	app.get("*", (_req, res) => {
+	// Catch-all handler - must be last, after all API routes
+	app.use((req, res) => {
+		// If it's an API route that wasn't matched, return 404
+		if (req.path.startsWith("/api")) {
+			return res.status(404).json({ error: "API route not found" });
+		}
+		// Serve index.html for SPA routing (React Router handles client-side routes)
 		res.sendFile(join(__dirname, "../dist/index.html"));
 	});
 }
