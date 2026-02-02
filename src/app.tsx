@@ -381,7 +381,7 @@ export default function App() {
 						<div className="h-full flex flex-col overflow-hidden bg-card">
 							{selectedRow ? (
 								<>
-									<div className="p-3 h-16 border-b bg-muted/70 flex items-center gap-4">
+									<div className="p-3 h-[66px] border-b bg-muted/70 flex items-center gap-4">
 										<div className="flex items-center gap-2">
 											<Edit3 className="w-4 h-4 text-muted-foreground" />
 											<span className="text-sm font-medium text-muted-foreground">
