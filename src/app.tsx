@@ -301,7 +301,7 @@ export default function App() {
 		<div className="h-svh flex flex-col bg-background">
 			<header className="border-b bg-card p-4 flex justify-between items-center">
 				<div className="flex items-center gap-4">
-					<h1 className="text-xl font-bold text-foreground">CSV Link Editor</h1>
+					<h1 className="text-xl font-bold text-foreground">CSV HTML Editor</h1>
 					<span className="text-sm text-muted-foreground">
 						{metadata.totalRows.toLocaleString()} rows &middot;{" "}
 						{metadata.fileName}

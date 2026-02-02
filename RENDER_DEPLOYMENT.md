@@ -15,10 +15,10 @@ git push origin main
 1. **Go to [render.com](https://render.com)** and sign up/login
 2. **Click "New +" → "Web Service"**
 3. **Connect your GitHub repository**
-   - Select your `csv-link-editor` repository
+   - Select your `csv-cell-editor` repository
    - Render will auto-detect `render.yaml`
 4. **Review Settings** (should be auto-filled from `render.yaml`):
-   - **Name**: csv-link-editor
+   - **Name**: csv-cell-editor
    - **Environment**: Node
    - **Build Command**: `pnpm install && pnpm build`
    - **Start Command**: `pnpm start`
@@ -43,7 +43,7 @@ If you see an error about `build:server`:
 
 ### 3. Your App is Live! 🎉
 
-Your app will be available at: `https://csv-link-editor.onrender.com` (or your custom domain)
+Your app will be available at: `https://csv-cell-editor.onrender.com` (or your custom domain)
 
 ## How It Works
 

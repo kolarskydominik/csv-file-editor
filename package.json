@@ -1,7 +1,7 @@
 {
-  "name": "csv-link-editor",
+  "name": "csv-cell-editor",
   "version": "1.0.0",
-  "description": "CSV editor for modifying HTML links within cells",
+  "description": "CSV editor for modifying HTML within cells",
   "type": "module",
   "scripts": {
     "dev": "concurrently \"pnpm dev:server\" \"pnpm dev:client\"",

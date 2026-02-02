@@ -1,6 +1,6 @@
-# CSV Link Editor
+# CSV Cell Editor
 
-A web application for editing HTML links within CSV files. Upload a CSV, select columns containing links, and edit them with a visual interface.
+A web application for editing HTML within CSV files. Upload a CSV, select columns containing links, and edit them with a visual interface.
 
 ## Features
 

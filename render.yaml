@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: csv-link-editor
+    name: csv-html-editor
     env: node
     buildCommand: pnpm install && pnpm build
     startCommand: pnpm start

@@ -1,4 +1,4 @@
-# Deployment Guide: CSV Link Editor to Render
+# Deployment Guide: CSV Cell Editor to Render
 
 ## Quick Deployment
 
@@ -18,7 +18,7 @@
    - Click "Create Web Service"
    - Wait ~2-5 minutes
 
-3. **Done!** Your app will be live at `https://csv-link-editor.onrender.com`
+3. **Done!** Your app will be live at `https://csv-cell-editor.onrender.com`
 
 ## How It Works
 

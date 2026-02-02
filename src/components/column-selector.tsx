@@ -50,7 +50,7 @@ export function ColumnSelector({
 	return (
 		<Card className="max-w-2xl mx-auto">
 			<CardHeader>
-				<CardTitle>Select Columns with Links</CardTitle>
+				<CardTitle>Select Columns with HTML</CardTitle>
 				<CardDescription>
 					<span className="font-medium">{fileName}</span> &middot;{" "}
 					{totalRows.toLocaleString()} rows
@@ -58,7 +58,7 @@ export function ColumnSelector({
 			</CardHeader>
 			<CardContent className="space-y-6">
 				<p className="text-sm text-muted-foreground">
-					Choose which columns contain HTML with links you want to edit:
+					Choose which columns contain HTML you want to edit:
 				</p>
 
 				<div className="grid grid-cols-3 gap-2 max-h-80 overflow-auto">
