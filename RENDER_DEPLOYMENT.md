@@ -25,8 +25,21 @@ git push origin main
    - **Environment Variables**:
      - `NODE_ENV=production` (auto-set)
      - `PORT` (auto-set by Render)
+
+   ⚠️ **Important**: Make sure these match exactly. If Render shows different commands, update them manually to match `render.yaml`.
+
 5. **Click "Create Web Service"**
 6. **Wait for deployment** (~2-5 minutes)
+
+### If Build Fails
+
+If you see an error about `build:server`:
+
+- Go to your service settings in Render dashboard
+- Check the **Build Command** field
+- Ensure it's exactly: `pnpm install && pnpm build`
+- Remove any references to `build:server`
+- Save and redeploy
 
 ### 3. Your App is Live! 🎉
 
@@ -57,7 +70,23 @@ No additional environment variables needed!
 
 ## Troubleshooting
 
-### Build Fails
+### Build Fails with "build:server" Error
+
+If you see: `ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL Command "build:server" not found`
+
+**Solution:**
+
+1. Go to your Render service dashboard
+2. Click **Settings** → **Build & Deploy**
+3. Check the **Build Command** field
+4. Ensure it's exactly: `pnpm install && pnpm build`
+5. Remove any `build:server` references
+6. Click **Save Changes**
+7. Trigger a new deploy
+
+**Note:** Render might cache old settings. Make sure the Build Command matches `render.yaml` exactly.
+
+### Other Build Issues
 
 - Check build logs in Render dashboard
 - Ensure `pnpm` is available (Render supports it)
