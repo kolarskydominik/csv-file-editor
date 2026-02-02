@@ -6,7 +6,7 @@ import {
 	Link as LinkIcon,
 	X,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { CellEditor } from "@/components/cell-editor";
 import { ChangesViewer } from "@/components/changes-viewer";
 import { ColumnSelector } from "@/components/column-selector";
@@ -21,6 +21,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
 	ResizableHandle,
 	ResizablePanel,
@@ -34,6 +35,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useCSVData } from "@/hooks/use-csv-data";
 import { useLinkNavigation } from "@/hooks/use-link-navigation";
 import { parseLinks, replaceLinkHref } from "@/lib/link-parser";
@@ -65,6 +67,24 @@ export default function App() {
 	const [isSaving, setIsSaving] = useState(false);
 	const [isFeaturesModalOpen, setIsFeaturesModalOpen] = useState(false);
 	const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const autoSaveId = useId();
+	const lastSyncedRowColumnRef = useRef<{
+		rowIndex: number | null;
+		column: string;
+	} | null>(null);
+
+	// Auto-save preference (default to false, stored in localStorage)
+	const [autoSave, setAutoSave] = useState<boolean>(() => {
+		const saved = localStorage.getItem("csv-editor-auto-save");
+		return saved !== null ? saved === "true" : false;
+	});
+
+	// Track unsaved changes for manual save mode
+	const [unsavedChanges, setUnsavedChanges] = useState<{
+		rowIndex: number;
+		column: string;
+		html: string;
+	} | null>(null);
 
 	const {
 		currentLinkIndex,
@@ -225,9 +245,45 @@ export default function App() {
 
 	// Sync editor content when row or column changes
 	useEffect(() => {
+		const currentRowColumn = { rowIndex: selectedRowIndex, column };
+		const lastSynced = lastSyncedRowColumnRef.current;
+
+		// Check if we're actually switching to a different row/column
+		const isSwitching =
+			!lastSynced ||
+			lastSynced.rowIndex !== selectedRowIndex ||
+			lastSynced.column !== column;
+
+		// If we have unsaved changes for the current row/column, preserve them
+		// This prevents the editor from jumping back to saved content while user is editing
+		if (
+			unsavedChanges &&
+			unsavedChanges.rowIndex === selectedRowIndex &&
+			unsavedChanges.column === column
+		) {
+			// Only update if we're switching rows/columns (user navigated away)
+			if (isSwitching) {
+				// User switched away, clear unsaved changes
+				const html = selectedRow?.[column] || "";
+				setEditorContent(html);
+				setUnsavedChanges(null);
+				lastSyncedRowColumnRef.current = currentRowColumn;
+			}
+			// Otherwise, keep the unsaved content - don't overwrite user's edits
+			return;
+		}
+
+		// Only sync from selectedRow if we're switching to a different row/column
+		// or if there are no unsaved changes for the current row/column
 		const html = selectedRow?.[column] || "";
 		setEditorContent(html);
-	}, [selectedRow, column]);
+		lastSyncedRowColumnRef.current = currentRowColumn;
+
+		// Clear unsaved changes when switching rows/columns
+		if (isSwitching) {
+			setUnsavedChanges(null);
+		}
+	}, [selectedRow, column, selectedRowIndex, unsavedChanges]);
 
 	// Handle editor content change (called from CellEditor with debounce)
 	const handleEditorChange = useCallback(
@@ -237,28 +293,83 @@ export default function App() {
 			// Check if content actually changed before saving
 			const currentContent = selectedRow?.[column] || "";
 			if (html === currentContent) {
-				// Content hasn't changed, don't save
+				// Content hasn't changed, clear unsaved changes
+				setUnsavedChanges(null);
 				return;
 			}
 
 			setEditorContent(html);
-			setIsSaving(true);
 
-			// Clear any pending save
-			if (saveTimeoutRef.current) {
-				clearTimeout(saveTimeoutRef.current);
-			}
+			// If auto-save is enabled, save automatically
+			if (autoSave) {
+				setIsSaving(true);
+				setUnsavedChanges(null);
 
-			// Save after a short delay to batch rapid changes
-			saveTimeoutRef.current = setTimeout(async () => {
-				const success = await updateCell(selectedRowIndex, column, html);
-				if (success) {
-					refreshLinkRows();
+				// Clear any pending save
+				if (saveTimeoutRef.current) {
+					clearTimeout(saveTimeoutRef.current);
 				}
-				setIsSaving(false);
-			}, 100);
+
+				// Save after a short delay to batch rapid changes
+				saveTimeoutRef.current = setTimeout(async () => {
+					const success = await updateCell(selectedRowIndex, column, html);
+					if (success) {
+						refreshLinkRows();
+					}
+					setIsSaving(false);
+				}, 100);
+			} else {
+				// Manual save mode: track unsaved changes
+				setUnsavedChanges({
+					rowIndex: selectedRowIndex,
+					column,
+					html,
+				});
+			}
 		},
-		[selectedRowIndex, column, selectedRow, updateCell, refreshLinkRows],
+		[
+			selectedRowIndex,
+			column,
+			selectedRow,
+			updateCell,
+			refreshLinkRows,
+			autoSave,
+		],
+	);
+
+	// Manual save handler
+	const handleManualSave = useCallback(async () => {
+		if (!unsavedChanges) return;
+
+		setIsSaving(true);
+		const htmlToSave = unsavedChanges.html;
+		const success = await updateCell(
+			unsavedChanges.rowIndex,
+			unsavedChanges.column,
+			htmlToSave,
+		);
+		if (success) {
+			setUnsavedChanges(null);
+			// Update editorContent to match the saved content
+			// This will trigger a re-sync, but since unsavedChanges is null, it will use selectedRow
+			setEditorContent(htmlToSave);
+			refreshLinkRows();
+		}
+		setIsSaving(false);
+	}, [unsavedChanges, updateCell, refreshLinkRows]);
+
+	// Handle auto-save toggle
+	const handleAutoSaveToggle = useCallback(
+		(checked: boolean) => {
+			setAutoSave(checked);
+			localStorage.setItem("csv-editor-auto-save", String(checked));
+
+			// If switching to auto-save and there are unsaved changes, save them
+			if (checked && unsavedChanges) {
+				handleManualSave();
+			}
+		},
+		[unsavedChanges, handleManualSave],
 	);
 
 	// Cleanup save timeout on unmount
@@ -393,6 +504,32 @@ export default function App() {
 						onPrev={handlePrev}
 						onNext={handleNext}
 					/>
+					{/* Auto-save toggle */}
+					<div className="flex items-center gap-2 px-2">
+						<Label
+							htmlFor={autoSaveId}
+							className="text-sm text-muted-foreground cursor-pointer"
+						>
+							Auto-save
+						</Label>
+						<Switch
+							id={autoSaveId}
+							checked={autoSave}
+							onCheckedChange={handleAutoSaveToggle}
+							aria-label="Toggle auto-save"
+						/>
+					</div>
+					{/* Manual save button (only shown when auto-save is off) */}
+					{!autoSave && unsavedChanges && (
+						<Button
+							onClick={handleManualSave}
+							disabled={isSaving}
+							variant="default"
+							size="sm"
+						>
+							{isSaving ? "Saving..." : "Save Changes"}
+						</Button>
+					)}
 					<ChangesViewer
 						isDirty={metadata.isDirty}
 						dirtyCount={metadata.dirtyCount}
@@ -488,6 +625,7 @@ export default function App() {
 										content={editorContent}
 										onChange={handleEditorChange}
 										isSaving={isSaving}
+										hasUnsavedChanges={!autoSave && unsavedChanges !== null}
 									/>
 								</>
 							) : (

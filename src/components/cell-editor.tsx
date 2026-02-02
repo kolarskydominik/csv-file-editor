@@ -36,6 +36,7 @@ type CellEditorProps = {
 	onChange: (html: string) => void;
 	disabled?: boolean;
 	isSaving?: boolean;
+	hasUnsavedChanges?: boolean;
 };
 
 export function CellEditor({
@@ -43,6 +44,7 @@ export function CellEditor({
 	onChange,
 	disabled = false,
 	isSaving = false,
+	hasUnsavedChanges = false,
 }: CellEditorProps) {
 	const [linkUrl, setLinkUrl] = useState("");
 	const [showLinkInput, setShowLinkInput] = useState(false);
@@ -450,12 +452,16 @@ export function CellEditor({
 
 				{/* Save indicator */}
 				<div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground min-w-[80px]">
-					<div
-						className={cn("flex items-center gap-2", !isSaving && "invisible")}
-					>
-						<Loader2 className="w-4 h-4 animate-spin" />
-						<span>Saving...</span>
-					</div>
+					{isSaving ? (
+						<div className="flex items-center gap-2">
+							<Loader2 className="w-4 h-4 animate-spin" />
+							<span>Saving...</span>
+						</div>
+					) : hasUnsavedChanges ? (
+						<div className="flex items-center gap-2 text-amber-600 dark:text-amber-500">
+							<span>Unsaved changes</span>
+						</div>
+					) : null}
 				</div>
 			</div>
 
