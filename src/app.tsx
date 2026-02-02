@@ -1,9 +1,9 @@
-import { Eye, FileText, Keyboard, Link as LinkIcon, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { Edit3, FileText, Keyboard, Link as LinkIcon, Save, X, Zap } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CellEditor } from "@/components/cell-editor";
 import { ColumnSelector } from "@/components/column-selector";
 import { DownloadButton } from "@/components/download-button";
 import { FileDropZone } from "@/components/file-drop-zone";
-import { HtmlPreview } from "@/components/html-preview";
 import { LinkEditorModal } from "@/components/link-editor-modal";
 import { LinksList } from "@/components/links-list";
 import { Navigation } from "@/components/navigation";
@@ -51,6 +51,9 @@ export default function App() {
 	const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
 	const [selectedLink, setSelectedLink] = useState<SelectedLink | null>(null);
 	const [column, setColumn] = useState<string>("");
+	const [editorContent, setEditorContent] = useState<string>("");
+	const [isSaving, setIsSaving] = useState(false);
+	const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const {
 		currentLinkIndex,
@@ -86,14 +89,13 @@ export default function App() {
 
 	const handleLinkSave = useCallback(
 		async (newHref: string) => {
-			if (selectedRowIndex === null || !selectedLink || !selectedRow) return;
+			if (selectedRowIndex === null || !selectedLink) return;
 
-			const html = selectedRow[column] || "";
-			const updatedHtml = replaceLinkHref(html, selectedLink.index, newHref);
+			const updatedHtml = replaceLinkHref(editorContent, selectedLink.index, newHref);
 
 			const success = await updateCell(selectedRowIndex, column, updatedHtml);
 			if (success) {
-				setSelectedLink({ ...selectedLink, href: newHref });
+				setEditorContent(updatedHtml);
 				refreshLinkRows();
 				setSelectedLink(null);
 			}
@@ -101,7 +103,7 @@ export default function App() {
 		[
 			selectedRowIndex,
 			selectedLink,
-			selectedRow,
+			editorContent,
 			column,
 			updateCell,
 			refreshLinkRows,
@@ -165,9 +167,48 @@ export default function App() {
 	// Get available link columns from metadata
 	const linkColumns = metadata?.linkColumns || [];
 
+	// Sync editor content when row or column changes
+	useEffect(() => {
+		const html = selectedRow?.[column] || "";
+		setEditorContent(html);
+	}, [selectedRow, column]);
+
+	// Handle editor content change (called from CellEditor with debounce)
+	const handleEditorChange = useCallback(
+		async (html: string) => {
+			if (selectedRowIndex === null || !column) return;
+
+			setEditorContent(html);
+			setIsSaving(true);
+
+			// Clear any pending save
+			if (saveTimeoutRef.current) {
+				clearTimeout(saveTimeoutRef.current);
+			}
+
+			// Save after a short delay to batch rapid changes
+			saveTimeoutRef.current = setTimeout(async () => {
+				const success = await updateCell(selectedRowIndex, column, html);
+				if (success) {
+					refreshLinkRows();
+				}
+				setIsSaving(false);
+			}, 100);
+		},
+		[selectedRowIndex, column, updateCell, refreshLinkRows]
+	);
+
+	// Cleanup save timeout on unmount
+	useEffect(() => {
+		return () => {
+			if (saveTimeoutRef.current) {
+				clearTimeout(saveTimeoutRef.current);
+			}
+		};
+	}, []);
+
 	// Count links in current content
-	const currentHtml = selectedRow?.[column] || "";
-	const linksInCurrentContent = parseLinks(currentHtml).length;
+	const linksInCurrentContent = parseLinks(editorContent).length;
 
 	// Step 1: No file uploaded - show drop zone
 	if (!uploadResult) {
@@ -296,14 +337,14 @@ export default function App() {
 
 					<ResizableHandle withHandle />
 
-					{/* Center: Preview */}
+					{/* Center: Editor */}
 					<ResizablePanel defaultSize={50} minSize={30}>
 						<div className="h-full flex flex-col overflow-hidden bg-card">
 							{selectedRow ? (
 								<>
 									<div className="p-3 h-16 border-b bg-muted/70 flex items-center gap-4">
 										<div className="flex items-center gap-2">
-											<Eye className="w-4 h-4 text-muted-foreground" />
+											<Edit3 className="w-4 h-4 text-muted-foreground" />
 											<span className="text-sm font-medium text-muted-foreground">
 												Column:
 											</span>
@@ -326,18 +367,16 @@ export default function App() {
 										</Badge>
 									</div>
 
-									<ScrollArea className="flex-1 p-6">
-										<HtmlPreview
-											html={currentHtml}
-											onLinkClick={handleLinkClick}
-											selectedLinkIndex={selectedLink?.index}
-										/>
-									</ScrollArea>
+									<CellEditor
+										content={editorContent}
+										onChange={handleEditorChange}
+										isSaving={isSaving}
+									/>
 								</>
 							) : (
 								<div className="flex-1 flex items-center justify-center text-muted-foreground">
 									<div className="text-center">
-										<p className="text-lg mb-2">Select a record to view</p>
+										<p className="text-lg mb-2">Select a record to edit</p>
 										<p className="text-sm">
 											or use arrow keys / navigation buttons
 										</p>
@@ -359,7 +398,7 @@ export default function App() {
 							<ScrollArea className="flex-1">
 								{selectedRow ? (
 									<LinksList
-										html={currentHtml}
+										html={editorContent}
 										selectedLinkIndex={selectedLink?.index}
 										onLinkClick={handleLinkClick}
 									/>

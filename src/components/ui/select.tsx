@@ -11,7 +11,10 @@ type SelectProps = {
 
 function Select({ value, onValueChange, children }: SelectProps) {
   return (
-    <BaseSelect.Root value={value} onValueChange={onValueChange}>
+    <BaseSelect.Root
+      value={value}
+      onValueChange={(val) => val !== null && onValueChange?.(val)}
+    >
       {children}
     </BaseSelect.Root>
   )

@@ -17,10 +17,7 @@ function ScrollArea({
   )
 }
 
-function ScrollBar({
-  className,
-  orientation = 'vertical',
-}: {
+function ScrollBar(_props: {
   className?: string
   orientation?: 'vertical' | 'horizontal'
 }) {
