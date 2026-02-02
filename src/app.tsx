@@ -69,6 +69,14 @@ export default function App() {
 		}
 	}, [metadata, column]);
 
+	// Load initial rows when metadata is available
+	useEffect(() => {
+		if (metadata && metadata.totalRows > 0 && rows.size === 0) {
+			// Load first batch of rows
+			loadRows(0, 50);
+		}
+	}, [metadata, rows.size, loadRows]);
+
 	const selectedRow =
 		selectedRowIndex !== null ? rows.get(selectedRowIndex) : null;
 
@@ -87,7 +95,7 @@ export default function App() {
 			if (success) {
 				setSelectedLink({ ...selectedLink, href: newHref });
 				refreshLinkRows();
-				setSelectedLink(null)
+				setSelectedLink(null);
 			}
 		},
 		[

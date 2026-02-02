@@ -31,15 +31,28 @@ export function RecordList({
 
 	// Load rows as user scrolls
 	const loadVisibleRows = useCallback(() => {
-		if (items.length === 0) return;
+		if (items.length === 0) {
+			// If no items are visible yet, load the first batch
+			if (totalRows > 0) {
+				loadRows(0, 50);
+			}
+			return;
+		}
 		const firstIndex = items[0].index;
 		const lastIndex = items[items.length - 1].index;
 		loadRows(Math.max(0, firstIndex - 10), lastIndex - firstIndex + 30);
-	}, [items, loadRows]);
+	}, [items, loadRows, totalRows]);
 
 	useEffect(() => {
 		loadVisibleRows();
 	}, [loadVisibleRows]);
+
+	// Also load initial rows when component mounts and totalRows is available
+	useEffect(() => {
+		if (totalRows > 0 && rows.size === 0) {
+			loadRows(0, 50);
+		}
+	}, [totalRows, rows.size, loadRows]);
 
 	// Scroll to selected row
 	useEffect(() => {

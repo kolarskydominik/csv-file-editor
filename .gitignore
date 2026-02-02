@@ -67,3 +67,4 @@ Thumbs.db
 # Optional: Uncomment if you want to ignore CSV data files
 # data/*.csv
 # !data/sample.csv
+.vercel
