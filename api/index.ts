@@ -11,11 +11,19 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 
+// Debug middleware to see what paths Vercel is sending
+app.use((req, res, next) => {
+	console.log(
+		`[Express] ${req.method} ${req.url} - Original: ${req.originalUrl}`,
+	);
+	next();
+});
+
 let linkIndex: number[] = [];
 let linkColumns: string[] = [];
 
 // POST /api/upload
-app.post("/api/upload", (req: Request, res: Response) => {
+app.post("/upload", (req: Request, res: Response) => {
 	const { content, fileName } = req.body as {
 		content: string;
 		fileName: string;
@@ -46,7 +54,7 @@ app.post("/api/upload", (req: Request, res: Response) => {
 });
 
 // POST /api/set-link-columns
-app.post("/api/set-link-columns", (req: Request, res: Response) => {
+app.post("/set-link-columns", (req: Request, res: Response) => {
 	const { columns } = req.body as { columns: string[] };
 
 	if (!columns || columns.length === 0) {
@@ -65,7 +73,7 @@ app.post("/api/set-link-columns", (req: Request, res: Response) => {
 });
 
 // GET /api/metadata
-app.get("/api/metadata", (_req: Request, res: Response) => {
+app.get("/metadata", (_req: Request, res: Response) => {
 	res.json({
 		totalRows: csvManager.totalRows,
 		columns: csvManager.columnNames,
@@ -78,14 +86,14 @@ app.get("/api/metadata", (_req: Request, res: Response) => {
 });
 
 // GET /api/rows
-app.get("/api/rows", (req: Request, res: Response) => {
+app.get("/rows", (req: Request, res: Response) => {
 	const start = parseInt((req.query.start as string) || "0");
 	const count = parseInt((req.query.count as string) || "50");
 	res.json(csvManager.getRows(start, count));
 });
 
 // GET /api/row/:index
-app.get("/api/row/:index", (req: Request, res: Response) => {
+app.get("/row/:index", (req: Request, res: Response) => {
 	const index = parseInt(req.params.index);
 	const row = csvManager.getRow(index);
 	if (row) {
@@ -96,7 +104,7 @@ app.get("/api/row/:index", (req: Request, res: Response) => {
 });
 
 // PATCH /api/row/:index
-app.patch("/api/row/:index", (req: Request, res: Response) => {
+app.patch("/row/:index", (req: Request, res: Response) => {
 	const index = parseInt(req.params.index);
 	const { column, value } = req.body as { column: string; value: string };
 
@@ -121,7 +129,7 @@ app.patch("/api/row/:index", (req: Request, res: Response) => {
 });
 
 // GET /api/download
-app.get("/api/download", (_req: Request, res: Response) => {
+app.get("/download", (_req: Request, res: Response) => {
 	const csv = csvManager.exportCSV();
 	const fileName = csvManager.loadedFileName.replace(".csv", "-modified.csv");
 
@@ -131,21 +139,21 @@ app.get("/api/download", (_req: Request, res: Response) => {
 });
 
 // GET /api/links/next
-app.get("/api/links/next", (req: Request, res: Response) => {
+app.get("/links/next", (req: Request, res: Response) => {
 	const from = parseInt((req.query.from as string) || "0");
 	const rowIndex = findNextLinkRow(linkIndex, from);
 	res.json({ rowIndex });
 });
 
 // GET /api/links/prev
-app.get("/api/links/prev", (req: Request, res: Response) => {
+app.get("/links/prev", (req: Request, res: Response) => {
 	const from = parseInt((req.query.from as string) || "0");
 	const rowIndex = findPrevLinkRow(linkIndex, from);
 	res.json({ rowIndex });
 });
 
 // GET /api/links/all
-app.get("/api/links/all", (_req: Request, res: Response) => {
+app.get("/links/all", (_req: Request, res: Response) => {
 	res.json({ rowIndices: linkIndex });
 });
 
