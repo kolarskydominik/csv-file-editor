@@ -313,7 +313,8 @@ export default function App() {
 				<div className="flex gap-4 items-center">
 					<Badge variant="secondary" className="gap-1">
 						<Keyboard className="size-3" />
-						Arrow keys to navigate
+						<span className="hidden sm:inline">← → navigate records</span>
+						<span className="sm:hidden">← →</span>
 					</Badge>
 					<Navigation
 						currentRow={selectedRowIndex}
