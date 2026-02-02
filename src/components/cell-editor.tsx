@@ -449,20 +449,20 @@ export function CellEditor({
 				</div>
 
 				{/* Save indicator */}
-				<div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
-					{isSaving && (
-						<>
-							<Loader2 className="w-4 h-4 animate-spin" />
-							<span>Saving...</span>
-						</>
-					)}
+				<div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground min-w-[80px]">
+					<div
+						className={cn("flex items-center gap-2", !isSaving && "invisible")}
+					>
+						<Loader2 className="w-4 h-4 animate-spin" />
+						<span>Saving...</span>
+					</div>
 				</div>
 			</div>
 
 			{/* Editor content */}
 			<section
 				ref={editorContainerRef}
-				className="flex-1 overflow-auto px-4 pb-6 mb-16 relative"
+				className="flex-1 overflow-auto px-4 pb-6 mb-16 relative min-h-0"
 				onMouseMove={handleMouseMove}
 				onMouseLeave={handleMouseLeave}
 				aria-label="Editor content area"
@@ -471,26 +471,26 @@ export function CellEditor({
 					editor={editor}
 					className={cn(
 						"prose dark:prose-invert prose-sm max-w-none min-h-full",
-						"[&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-full",
-						"[&_.ProseMirror_p]:my-2 [&_.ProseMirror_p:hover]:bg-secondary [&_.ProseMirror_p:hover]:rounded",
-						"[&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:font-bold [&_.ProseMirror_h1]:my-4 [&_.ProseMirror_h1:hover]:bg-secondary [&_.ProseMirror_h1:hover]:rounded",
-						"[&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:my-3 [&_.ProseMirror_h2:hover]:bg-secondary [&_.ProseMirror_h2:hover]:rounded",
-						"[&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h3]:font-bold [&_.ProseMirror_h3]:my-2 [&_.ProseMirror_h3:hover]:bg-secondary [&_.ProseMirror_h3:hover]:rounded",
-						"[&_.ProseMirror_h4:hover]:bg-secondary [&_.ProseMirror_h4:hover]:rounded",
-						"[&_.ProseMirror_h5:hover]:bg-secondary [&_.ProseMirror_h5:hover]:rounded",
-						"[&_.ProseMirror_h6:hover]:bg-secondary [&_.ProseMirror_h6:hover]:rounded",
-						"[&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-6 [&_.ProseMirror_ul]:my-2 [&_.ProseMirror_ul:hover]:bg-secondary [&_.ProseMirror_ul:hover]:rounded",
-						"[&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-6 [&_.ProseMirror_ol]:my-2 [&_.ProseMirror_ol:hover]:bg-secondary [&_.ProseMirror_ol:hover]:rounded",
-						"[&_.ProseMirror_li]:my-1 [&_.ProseMirror_li:hover]:bg-secondary [&_.ProseMirror_li:hover]:rounded",
-						"[&_.ProseMirror_a]:text-primary [&_.ProseMirror_a]:underline [&_.ProseMirror_a:hover]:bg-secondary [&_.ProseMirror_a:hover]:rounded",
-						"[&_.ProseMirror_strong]:hover:bg-secondary [&_.ProseMirror_strong]:hover:rounded",
-						"[&_.ProseMirror_b]:hover:bg-secondary [&_.ProseMirror_b]:hover:rounded",
-						"[&_.ProseMirror_em]:hover:bg-secondary [&_.ProseMirror_em]:hover:rounded",
-						"[&_.ProseMirror_i]:hover:bg-secondary [&_.ProseMirror_i]:hover:rounded",
-						"[&_.ProseMirror_u]:hover:bg-secondary [&_.ProseMirror_u]:hover:rounded",
-						"[&_.ProseMirror_blockquote]:border-l-4 [&_.ProseMirror_blockquote]:border-border [&_.ProseMirror_blockquote]:pl-4 [&_.ProseMirror_blockquote]:italic [&_.ProseMirror_blockquote:hover]:bg-secondary [&_.ProseMirror_blockquote:hover]:rounded",
-						"[&_.ProseMirror_code]:bg-muted [&_.ProseMirror_code]:px-1 [&_.ProseMirror_code]:rounded [&_.ProseMirror_code:hover]:bg-secondary",
-						"[&_.ProseMirror_pre]:bg-muted [&_.ProseMirror_pre]:p-4 [&_.ProseMirror_pre]:rounded [&_.ProseMirror_pre:hover]:bg-secondary",
+						"[&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-full [&_.ProseMirror]:will-change-auto",
+						"[&_.ProseMirror_p]:my-2 [&_.ProseMirror_p]:transition-colors [&_.ProseMirror_p:hover]:bg-secondary [&_.ProseMirror_p:hover]:rounded",
+						"[&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:font-bold [&_.ProseMirror_h1]:my-4 [&_.ProseMirror_h1]:transition-colors [&_.ProseMirror_h1:hover]:bg-secondary [&_.ProseMirror_h1:hover]:rounded",
+						"[&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:my-3 [&_.ProseMirror_h2]:transition-colors [&_.ProseMirror_h2:hover]:bg-secondary [&_.ProseMirror_h2:hover]:rounded",
+						"[&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h3]:font-bold [&_.ProseMirror_h3]:my-2 [&_.ProseMirror_h3]:transition-colors [&_.ProseMirror_h3:hover]:bg-secondary [&_.ProseMirror_h3:hover]:rounded",
+						"[&_.ProseMirror_h4]:transition-colors [&_.ProseMirror_h4:hover]:bg-secondary [&_.ProseMirror_h4:hover]:rounded",
+						"[&_.ProseMirror_h5]:transition-colors [&_.ProseMirror_h5:hover]:bg-secondary [&_.ProseMirror_h5:hover]:rounded",
+						"[&_.ProseMirror_h6]:transition-colors [&_.ProseMirror_h6:hover]:bg-secondary [&_.ProseMirror_h6:hover]:rounded",
+						"[&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-6 [&_.ProseMirror_ul]:my-2 [&_.ProseMirror_ul]:transition-colors [&_.ProseMirror_ul:hover]:bg-secondary [&_.ProseMirror_ul:hover]:rounded",
+						"[&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-6 [&_.ProseMirror_ol]:my-2 [&_.ProseMirror_ol]:transition-colors [&_.ProseMirror_ol:hover]:bg-secondary [&_.ProseMirror_ol:hover]:rounded",
+						"[&_.ProseMirror_li]:my-1 [&_.ProseMirror_li]:transition-colors [&_.ProseMirror_li:hover]:bg-secondary [&_.ProseMirror_li:hover]:rounded",
+						"[&_.ProseMirror_a]:text-primary [&_.ProseMirror_a]:underline [&_.ProseMirror_a]:transition-colors [&_.ProseMirror_a:hover]:bg-secondary [&_.ProseMirror_a:hover]:rounded",
+						"[&_.ProseMirror_strong]:transition-colors [&_.ProseMirror_strong]:hover:bg-secondary [&_.ProseMirror_strong]:hover:rounded",
+						"[&_.ProseMirror_b]:transition-colors [&_.ProseMirror_b]:hover:bg-secondary [&_.ProseMirror_b]:hover:rounded",
+						"[&_.ProseMirror_em]:transition-colors [&_.ProseMirror_em]:hover:bg-secondary [&_.ProseMirror_em]:hover:rounded",
+						"[&_.ProseMirror_i]:transition-colors [&_.ProseMirror_i]:hover:bg-secondary [&_.ProseMirror_i]:hover:rounded",
+						"[&_.ProseMirror_u]:transition-colors [&_.ProseMirror_u]:hover:bg-secondary [&_.ProseMirror_u]:hover:rounded",
+						"[&_.ProseMirror_blockquote]:border-l-4 [&_.ProseMirror_blockquote]:border-border [&_.ProseMirror_blockquote]:pl-4 [&_.ProseMirror_blockquote]:italic [&_.ProseMirror_blockquote]:transition-colors [&_.ProseMirror_blockquote:hover]:bg-secondary [&_.ProseMirror_blockquote:hover]:rounded",
+						"[&_.ProseMirror_code]:bg-muted [&_.ProseMirror_code]:px-1 [&_.ProseMirror_code]:rounded [&_.ProseMirror_code]:transition-colors [&_.ProseMirror_code:hover]:bg-secondary",
+						"[&_.ProseMirror_pre]:bg-muted [&_.ProseMirror_pre]:p-4 [&_.ProseMirror_pre]:rounded [&_.ProseMirror_pre]:transition-colors [&_.ProseMirror_pre:hover]:bg-secondary",
 					)}
 				/>
 				{/* Tooltip */}
