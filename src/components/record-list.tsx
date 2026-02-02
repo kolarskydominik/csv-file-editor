@@ -88,10 +88,10 @@ export function RecordList({
 						<div
 							key={virtualItem.index}
 							onClick={() => onSelect(virtualItem.index)}
-							className={`absolute w-full px-4 py-3 border-b border-l-4  border-b-gray-100 cursor-pointer transition-colors ${
+							className={`absolute w-full px-4 py-3 border-b border-l-4  border-border/60 cursor-pointer transition-colors ${
 								selectedIndex === virtualItem.index
-									? "bg-blue-50 border-l-4 border-l-blue-500"
-									: "hover:bg-gray-50"
+									? "bg-primary/10 border-l-4 border-l-primary"
+									: "hover:bg-accent/50"
 							}`}
 							style={{
 								height: `${virtualItem.size}px`,

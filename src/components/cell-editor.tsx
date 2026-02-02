@@ -457,7 +457,7 @@ export function CellEditor({
 				<EditorContent
 					editor={editor}
 					className={cn(
-						"prose prose-sm max-w-none min-h-full",
+						"prose dark:prose-invert prose-sm max-w-none min-h-full",
 						"[&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-full",
 						"[&_.ProseMirror_p]:my-2 [&_.ProseMirror_p:hover]:bg-secondary [&_.ProseMirror_p:hover]:rounded",
 						"[&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:font-bold [&_.ProseMirror_h1]:my-4 [&_.ProseMirror_h1:hover]:bg-secondary [&_.ProseMirror_h1:hover]:rounded",
