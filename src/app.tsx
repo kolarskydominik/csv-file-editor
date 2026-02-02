@@ -152,22 +152,42 @@ export default function App() {
 	}, [reset]);
 
 	// Keyboard navigation - arrow keys for prev/next record
+	// Left/Right: always navigate between records (unless in input/textarea)
+	// Up/Down: only navigate when NOT in editor (ProseMirror)
 	useEffect(() => {
 		if (!metadata || selectedLink !== null) return; // Don't navigate when modal is open
 
 		const handleKeyDown = (e: KeyboardEvent) => {
-			// Don't intercept when typing in an input
+			const target = e.target as HTMLElement;
+
+			// Don't intercept when typing in an input or textarea
 			if (
-				e.target instanceof HTMLInputElement ||
-				e.target instanceof HTMLTextAreaElement
+				target instanceof HTMLInputElement ||
+				target instanceof HTMLTextAreaElement
 			) {
 				return;
 			}
 
-			if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+			// Check if we're inside the Tiptap editor (ProseMirror)
+			const isInEditor = target.closest(".ProseMirror") !== null;
+
+			// Left/Right: navigate between records (unless in input)
+			if (e.key === "ArrowLeft") {
+				if (!isInEditor) {
+					e.preventDefault();
+					handlePrev();
+				}
+			} else if (e.key === "ArrowRight") {
+				if (!isInEditor) {
+					e.preventDefault();
+					handleNext();
+				}
+			}
+			// Up/Down: only navigate when NOT in editor
+			else if (e.key === "ArrowUp" && !isInEditor) {
 				e.preventDefault();
 				handlePrev();
-			} else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+			} else if (e.key === "ArrowDown" && !isInEditor) {
 				e.preventDefault();
 				handleNext();
 			}
