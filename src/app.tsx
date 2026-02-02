@@ -1,12 +1,4 @@
-import {
-	Edit3,
-	FileText,
-	Keyboard,
-	Link as LinkIcon,
-	Save,
-	X,
-	Zap,
-} from "lucide-react";
+import { Edit3, FileText, Keyboard, Link as LinkIcon, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CellEditor } from "@/components/cell-editor";
 import { ColumnSelector } from "@/components/column-selector";
@@ -139,6 +131,33 @@ export default function App() {
 		}
 	}, [goToNextLink]);
 
+	// Sequential navigation - move one row at a time
+	const handlePrevSequential = useCallback(() => {
+		if (selectedRowIndex === null) {
+			if (metadata && metadata.totalRows > 0) {
+				setSelectedRowIndex(metadata.totalRows - 1);
+				setSelectedLink(null);
+			}
+			return;
+		}
+		if (selectedRowIndex > 0) {
+			setSelectedRowIndex(selectedRowIndex - 1);
+			setSelectedLink(null);
+		}
+	}, [selectedRowIndex, metadata]);
+
+	const handleNextSequential = useCallback(() => {
+		if (selectedRowIndex === null) {
+			setSelectedRowIndex(0);
+			setSelectedLink(null);
+			return;
+		}
+		if (metadata && selectedRowIndex < metadata.totalRows - 1) {
+			setSelectedRowIndex(selectedRowIndex + 1);
+			setSelectedLink(null);
+		}
+	}, [selectedRowIndex, metadata]);
+
 	const handleColumnChange = useCallback((newColumn: string) => {
 		setColumn(newColumn);
 		setSelectedLink(null);
@@ -171,31 +190,25 @@ export default function App() {
 			// Check if we're inside the Tiptap editor (ProseMirror)
 			const isInEditor = target.closest(".ProseMirror") !== null;
 
-			// Left/Right: navigate between records (unless in input)
-			if (e.key === "ArrowLeft") {
-				if (!isInEditor) {
-					e.preventDefault();
-					handlePrev();
-				}
-			} else if (e.key === "ArrowRight") {
-				if (!isInEditor) {
-					e.preventDefault();
-					handleNext();
-				}
-			}
-			// Up/Down: only navigate when NOT in editor
-			else if (e.key === "ArrowUp" && !isInEditor) {
+			// Arrow keys: navigate sequentially one row at a time (unless in input/editor)
+			if (e.key === "ArrowLeft" && !isInEditor) {
 				e.preventDefault();
-				handlePrev();
+				handlePrevSequential();
+			} else if (e.key === "ArrowRight" && !isInEditor) {
+				e.preventDefault();
+				handleNextSequential();
+			} else if (e.key === "ArrowUp" && !isInEditor) {
+				e.preventDefault();
+				handlePrevSequential();
 			} else if (e.key === "ArrowDown" && !isInEditor) {
 				e.preventDefault();
-				handleNext();
+				handleNextSequential();
 			}
 		};
 
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [metadata, selectedLink, handlePrev, handleNext]);
+	}, [metadata, selectedLink, handlePrevSequential, handleNextSequential]);
 
 	// Get available link columns from metadata
 	const linkColumns = metadata?.linkColumns || [];
@@ -313,8 +326,8 @@ export default function App() {
 				<div className="flex gap-4 items-center">
 					<Badge variant="secondary" className="gap-1">
 						<Keyboard className="size-3" />
-						<span className="hidden sm:inline">← → navigate records</span>
-						<span className="sm:hidden">← →</span>
+						<span className="hidden sm:inline">← → ↑ ↓ navigate records</span>
+						<span className="sm:hidden">← → ↑ ↓</span>
 					</Badge>
 					<Navigation
 						currentRow={selectedRowIndex}
