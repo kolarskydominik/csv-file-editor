@@ -8,6 +8,7 @@ import { LinkEditorModal } from "@/components/link-editor-modal";
 import { LinksList } from "@/components/links-list";
 import { Navigation } from "@/components/navigation";
 import { RecordList } from "@/components/record-list";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -292,6 +293,7 @@ export default function App() {
 						dirtyCount={metadata.dirtyCount}
 						fileName={metadata.fileName}
 					/>
+					<ThemeToggle />
 				</div>
 			</header>
 
