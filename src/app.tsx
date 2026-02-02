@@ -36,6 +36,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { UnsavedChangesModal } from "@/components/unsaved-changes-modal";
 import { useCSVData } from "@/hooks/use-csv-data";
 import { useLinkNavigation } from "@/hooks/use-link-navigation";
 import { parseLinks, replaceLinkHref } from "@/lib/link-parser";
@@ -84,6 +85,12 @@ export default function App() {
 		rowIndex: number;
 		column: string;
 		html: string;
+	} | null>(null);
+
+	// Track pending navigation action (when user tries to navigate with unsaved changes)
+	const [pendingNavigation, setPendingNavigation] = useState<{
+		type: "row" | "column" | "startOver";
+		action: () => void;
 	} | null>(null);
 
 	const {
@@ -145,60 +152,93 @@ export default function App() {
 		],
 	);
 
+	// Helper to check and handle navigation with unsaved changes
+	const handleNavigationWithCheck = useCallback(
+		(action: () => void, type: "row" | "column" | "startOver" = "row") => {
+			if (!autoSave && unsavedChanges) {
+				// Show confirmation modal
+				setPendingNavigation({ type, action });
+			} else {
+				// No unsaved changes, proceed with navigation
+				action();
+			}
+		},
+		[autoSave, unsavedChanges],
+	);
+
 	const handlePrev = useCallback(async () => {
 		const prevRow = await goToPrevLink();
 		if (prevRow !== null) {
-			setSelectedRowIndex(prevRow);
-			setSelectedLink(null);
+			handleNavigationWithCheck(() => {
+				setSelectedRowIndex(prevRow);
+				setSelectedLink(null);
+			}, "row");
 		}
-	}, [goToPrevLink]);
+	}, [goToPrevLink, handleNavigationWithCheck]);
 
 	const handleNext = useCallback(async () => {
 		const nextRow = await goToNextLink();
 		if (nextRow !== null) {
-			setSelectedRowIndex(nextRow);
-			setSelectedLink(null);
+			handleNavigationWithCheck(() => {
+				setSelectedRowIndex(nextRow);
+				setSelectedLink(null);
+			}, "row");
 		}
-	}, [goToNextLink]);
+	}, [goToNextLink, handleNavigationWithCheck]);
 
 	// Sequential navigation - move one row at a time
 	const handlePrevSequential = useCallback(() => {
 		if (selectedRowIndex === null) {
 			if (metadata && metadata.totalRows > 0) {
-				setSelectedRowIndex(metadata.totalRows - 1);
-				setSelectedLink(null);
+				handleNavigationWithCheck(() => {
+					setSelectedRowIndex(metadata.totalRows - 1);
+					setSelectedLink(null);
+				}, "row");
 			}
 			return;
 		}
 		if (selectedRowIndex > 0) {
-			setSelectedRowIndex(selectedRowIndex - 1);
-			setSelectedLink(null);
+			handleNavigationWithCheck(() => {
+				setSelectedRowIndex(selectedRowIndex - 1);
+				setSelectedLink(null);
+			}, "row");
 		}
-	}, [selectedRowIndex, metadata]);
+	}, [selectedRowIndex, metadata, handleNavigationWithCheck]);
 
 	const handleNextSequential = useCallback(() => {
 		if (selectedRowIndex === null) {
-			setSelectedRowIndex(0);
-			setSelectedLink(null);
+			handleNavigationWithCheck(() => {
+				setSelectedRowIndex(0);
+				setSelectedLink(null);
+			}, "row");
 			return;
 		}
 		if (metadata && selectedRowIndex < metadata.totalRows - 1) {
-			setSelectedRowIndex(selectedRowIndex + 1);
-			setSelectedLink(null);
+			handleNavigationWithCheck(() => {
+				setSelectedRowIndex(selectedRowIndex + 1);
+				setSelectedLink(null);
+			}, "row");
 		}
-	}, [selectedRowIndex, metadata]);
+	}, [selectedRowIndex, metadata, handleNavigationWithCheck]);
 
-	const handleColumnChange = useCallback((newColumn: string) => {
-		setColumn(newColumn);
-		setSelectedLink(null);
-	}, []);
+	const handleColumnChange = useCallback(
+		(newColumn: string) => {
+			handleNavigationWithCheck(() => {
+				setColumn(newColumn);
+				setSelectedLink(null);
+			}, "column");
+		},
+		[handleNavigationWithCheck],
+	);
 
 	const handleStartOver = useCallback(() => {
-		setSelectedRowIndex(null);
-		setSelectedLink(null);
-		setColumn("");
-		reset();
-	}, [reset]);
+		handleNavigationWithCheck(() => {
+			setSelectedRowIndex(null);
+			setSelectedLink(null);
+			setColumn("");
+			reset();
+		}, "startOver");
+	}, [reset, handleNavigationWithCheck]);
 
 	// Keyboard navigation - arrow keys for prev/next record
 	// Left/Right: always navigate between records (unless in input/textarea)
@@ -354,9 +394,30 @@ export default function App() {
 			// This will trigger a re-sync, but since unsavedChanges is null, it will use selectedRow
 			setEditorContent(htmlToSave);
 			refreshLinkRows();
+
+			// If there's a pending navigation, execute it after saving
+			if (pendingNavigation) {
+				pendingNavigation.action();
+				setPendingNavigation(null);
+			}
 		}
 		setIsSaving(false);
-	}, [unsavedChanges, updateCell, refreshLinkRows]);
+	}, [unsavedChanges, updateCell, refreshLinkRows, pendingNavigation]);
+
+	// Handle discard changes
+	const handleDiscardChanges = useCallback(() => {
+		setUnsavedChanges(null);
+		// Execute pending navigation after discarding
+		if (pendingNavigation) {
+			pendingNavigation.action();
+			setPendingNavigation(null);
+		}
+	}, [pendingNavigation]);
+
+	// Handle cancel navigation
+	const handleCancelNavigation = useCallback(() => {
+		setPendingNavigation(null);
+	}, []);
 
 	// Handle auto-save toggle
 	const handleAutoSaveToggle = useCallback(
@@ -578,8 +639,10 @@ export default function App() {
 									totalRows={metadata.totalRows}
 									selectedIndex={selectedRowIndex}
 									onSelect={(idx) => {
-										setSelectedRowIndex(idx);
-										setSelectedLink(null);
+										handleNavigationWithCheck(() => {
+											setSelectedRowIndex(idx);
+											setSelectedLink(null);
+										}, "row");
 									}}
 									loadRows={loadRows}
 									rows={rows}
@@ -680,6 +743,15 @@ export default function App() {
 			<FeaturesModal
 				isOpen={isFeaturesModalOpen}
 				onClose={() => setIsFeaturesModalOpen(false)}
+			/>
+
+			{/* Unsaved Changes Modal */}
+			<UnsavedChangesModal
+				isOpen={pendingNavigation !== null}
+				onSave={handleManualSave}
+				onDiscard={handleDiscardChanges}
+				onCancel={handleCancelNavigation}
+				isSaving={isSaving}
 			/>
 		</div>
 	);
