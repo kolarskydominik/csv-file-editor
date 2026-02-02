@@ -1,4 +1,12 @@
-import { Edit3, FileText, Keyboard, Link as LinkIcon, Save, X, Zap } from "lucide-react";
+import {
+	Edit3,
+	FileText,
+	Keyboard,
+	Link as LinkIcon,
+	Save,
+	X,
+	Zap,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CellEditor } from "@/components/cell-editor";
 import { ColumnSelector } from "@/components/column-selector";
@@ -92,7 +100,11 @@ export default function App() {
 		async (newHref: string) => {
 			if (selectedRowIndex === null || !selectedLink) return;
 
-			const updatedHtml = replaceLinkHref(editorContent, selectedLink.index, newHref);
+			const updatedHtml = replaceLinkHref(
+				editorContent,
+				selectedLink.index,
+				newHref,
+			);
 
 			const success = await updateCell(selectedRowIndex, column, updatedHtml);
 			if (success) {
@@ -196,7 +208,7 @@ export default function App() {
 				setIsSaving(false);
 			}, 100);
 		},
-		[selectedRowIndex, column, updateCell, refreshLinkRows]
+		[selectedRowIndex, column, updateCell, refreshLinkRows],
 	);
 
 	// Cleanup save timeout on unmount
@@ -279,6 +291,10 @@ export default function App() {
 					</Button>
 				</div>
 				<div className="flex gap-4 items-center">
+					<Badge variant="secondary" className="gap-1">
+						<Keyboard className="size-3" />
+						Arrow keys to navigate
+					</Badge>
 					<Navigation
 						currentRow={selectedRowIndex}
 						currentLinkIndex={currentLinkIndex}
@@ -363,10 +379,6 @@ export default function App() {
 												))}
 											</SelectContent>
 										</Select>
-										<Badge variant="outline" className="gap-1">
-											<Keyboard className="w-3 h-3" />
-											Arrow keys to navigate
-										</Badge>
 									</div>
 
 									<CellEditor
