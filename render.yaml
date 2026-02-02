@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: csv-link-editor
+    env: node
+    buildCommand: pnpm install && pnpm build
+    startCommand: pnpm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /

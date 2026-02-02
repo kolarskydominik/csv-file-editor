@@ -34,33 +34,43 @@ The app will be available at:
 
 ## Deployment
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions to Vercel.
+See [DEPLOYMENT.md](./DEPLOYMENT.md) or [RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md) for deployment instructions.
 
-### Quick Deploy to Vercel
+### Quick Deploy to Render
 
 1. Push code to GitHub
-2. Import project in Vercel dashboard
-3. Vercel will auto-detect Vite configuration
+2. Go to [render.com](https://render.com)
+3. Connect GitHub repo → Render auto-detects `render.yaml`
 4. Deploy!
+
+**Benefits:**
+
+- ✅ No body size limit (handles large CSV files)
+- ✅ Persistent state
+- ✅ Simple deployment
 
 ## Project Structure
 
 ```
-├── api/              # Vercel serverless functions
-├── server/           # Express server (for local dev)
+├── server/           # Express server (serves API + frontend)
+│   ├── index.ts      # Main Express app
+│   ├── csv-manager.ts # CSV data management
+│   └── link-index.ts # Link indexing utilities
 ├── src/              # React frontend
 │   ├── components/   # React components
 │   ├── hooks/        # Custom React hooks
 │   └── lib/          # Utilities and API client
-└── vercel.json       # Vercel configuration
+├── render.yaml       # Render deployment configuration
+└── package.json      # Dependencies and scripts
 ```
 
 ## Tech Stack
 
 - **Frontend**: React 19, TypeScript, Vite, TailwindCSS
-- **Backend**: Express (local) / Vercel Serverless Functions (production)
+- **Backend**: Express.js (serves API + static frontend)
 - **CSV Parsing**: PapaParse
 - **UI Components**: Shadcn/ui, Radix UI
+- **Deployment**: Render
 
 ## License
 
