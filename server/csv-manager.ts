@@ -18,9 +18,20 @@ export class CSVManager {
 	private fileName: string = "";
 	private dirtyRows: Set<number> = new Set();
 	private changes: CellChange[] = [];
+	private googleSpreadsheetId: string | null = null;
+	private googleSheetGid: string | null = null;
+	private googleSheetName: string | null = null;
 
 	// Load from CSV content string (for drag-and-drop upload)
-	loadFromContent(content: string, fileName: string): void {
+	loadFromContent(
+		content: string,
+		fileName: string,
+		googleMetadata?: {
+			spreadsheetId: string;
+			gid: string | null;
+			sheetName: string | null;
+		},
+	): void {
 		this.fileName = fileName;
 
 		const result = Papa.parse<CSVRow>(content, {
@@ -32,6 +43,18 @@ export class CSVManager {
 		this.columns = result.meta.fields || [];
 		this.dirtyRows.clear();
 		this.changes = [];
+
+		// Store Google Sheets metadata if provided
+		if (googleMetadata) {
+			this.googleSpreadsheetId = googleMetadata.spreadsheetId;
+			this.googleSheetGid = googleMetadata.gid;
+			this.googleSheetName = googleMetadata.sheetName;
+		} else {
+			// Clear Google Sheets metadata for regular CSV uploads
+			this.googleSpreadsheetId = null;
+			this.googleSheetGid = null;
+			this.googleSheetName = null;
+		}
 	}
 
 	getRow(index: number): CSVRow | null {
@@ -124,6 +147,18 @@ export class CSVManager {
 
 	getChangesForRow(rowIndex: number): CellChange[] {
 		return this.changes.filter((c) => c.rowIndex === rowIndex);
+	}
+
+	get googleSpreadsheetIdValue(): string | null {
+		return this.googleSpreadsheetId;
+	}
+
+	get googleSheetGidValue(): string | null {
+		return this.googleSheetGid;
+	}
+
+	get googleSheetNameValue(): string | null {
+		return this.googleSheetName;
 	}
 }
 

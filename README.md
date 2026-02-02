@@ -5,10 +5,11 @@ A web application for editing HTML within CSV files. Upload a CSV, select column
 ## Features
 
 - 📤 Drag & drop CSV file upload
+- 📊 **Google Sheets integration** - Load and edit sheets directly from Google Sheets
 - 🔗 Visual link editor with HTML preview
 - 📝 Inline editing of CSV cells
 - 🧭 Navigation between rows with links
-- 💾 Download modified CSV files
+- 💾 Download modified CSV files or save back to Google Sheets
 - 🎨 Modern UI with TailwindCSS and React
 
 ## Local Development
@@ -31,6 +32,25 @@ The app will be available at:
 
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:3001
+
+## Google Sheets Integration Setup
+
+To enable Google Sheets integration (load and save sheets directly):
+
+1. **Set up Google OAuth credentials** - See [GOOGLE_SHEETS_SETUP.md](./GOOGLE_SHEETS_SETUP.md) for detailed instructions
+2. **Create a `.env` file** from `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+3. **Add your Google OAuth credentials** to `.env`
+4. **Restart the development server**
+
+The Google Sheets integration allows you to:
+
+- Load sheets directly from Google Sheets URLs (including private sheets)
+- Edit HTML links in the sheet
+- Save changes back to Google Sheets (only modified cells are updated)
+- Or download the modified CSV file
 
 ## Deployment
 

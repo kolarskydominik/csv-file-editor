@@ -8,6 +8,9 @@ export type Metadata = {
 	dirtyCount: number;
 	fileName: string;
 	linkColumns: string[];
+	googleSpreadsheetId?: string | null;
+	googleSheetGid?: string | null;
+	googleSheetName?: string | null;
 };
 
 export type RowData = {
@@ -20,6 +23,9 @@ export type UploadResult = {
 	totalRows: number;
 	columns: string[];
 	fileName: string;
+	googleSpreadsheetId?: string | null;
+	googleSheetGid?: string | null;
+	googleSheetName?: string | null;
 };
 
 export async function uploadCSV(
@@ -38,9 +44,7 @@ export async function uploadCSV(
 	return res.json();
 }
 
-export async function setLinkColumns(
-	columns: string[],
-): Promise<{
+export async function setLinkColumns(columns: string[]): Promise<{
 	success: boolean;
 	totalLinksRows: number;
 	linkColumns: string[];
@@ -129,4 +133,72 @@ export async function getChanges(): Promise<CellChange[]> {
 	const res = await fetch(`${API_BASE}/changes`);
 	const data = await res.json();
 	return data.changes;
+}
+
+// Google OAuth and Sheets API functions
+
+export async function checkGoogleAuth(): Promise<{ authenticated: boolean }> {
+	const res = await fetch(`${API_BASE}/google/token`, {
+		credentials: "include",
+	});
+	if (!res.ok) {
+		return { authenticated: false };
+	}
+	return res.json();
+}
+
+export async function getGoogleAuthUrl(): Promise<{ authUrl: string }> {
+	const res = await fetch(`${API_BASE}/google/auth`, {
+		credentials: "include",
+	});
+	if (!res.ok) {
+		const error = await res.json();
+		throw new Error(error.error || "Failed to get auth URL");
+	}
+	return res.json();
+}
+
+export async function logoutGoogle(): Promise<{ success: boolean }> {
+	const res = await fetch(`${API_BASE}/google/logout`, {
+		method: "POST",
+		credentials: "include",
+	});
+	if (!res.ok) {
+		const error = await res.json();
+		throw new Error(error.error || "Failed to logout");
+	}
+	return res.json();
+}
+
+export async function loadGoogleSheet(
+	spreadsheetId: string,
+	gid?: string | null,
+): Promise<UploadResult> {
+	const res = await fetch(`${API_BASE}/google/load-sheet`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		credentials: "include",
+		body: JSON.stringify({ spreadsheetId, gid }),
+	});
+	if (!res.ok) {
+		const error = await res.json();
+		throw new Error(error.error || "Failed to load Google Sheet");
+	}
+	return res.json();
+}
+
+export async function saveToGoogleSheet(): Promise<{
+	success: boolean;
+	cellsUpdated: number;
+}> {
+	const res = await fetch(`${API_BASE}/google/save-sheet`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		credentials: "include",
+	});
+	if (!res.ok) {
+		const error = await res.json();
+		throw new Error(error.error || "Failed to save to Google Sheets");
+	}
+	return res.json();
 }

@@ -51,6 +51,7 @@ export default function App() {
 		loading,
 		error,
 		uploadFile,
+		loadFromGoogleSheet,
 		selectColumns,
 		reset,
 		loadRows,
@@ -294,7 +295,11 @@ export default function App() {
 				</header>
 				<main className="flex-1 flex items-center justify-center p-4">
 					<div>
-						<FileDropZone onFileLoaded={uploadFile} loading={loading} />
+						<FileDropZone
+							onFileLoaded={uploadFile}
+							onGoogleSheetLoaded={loadFromGoogleSheet}
+							loading={loading}
+						/>
 						{error && (
 							<Alert variant="destructive" className="mt-4 max-w-xl mx-auto">
 								<AlertDescription className="flex items-center justify-between">
@@ -401,6 +406,7 @@ export default function App() {
 						isDirty={metadata.isDirty}
 						dirtyCount={metadata.dirtyCount}
 						fileName={metadata.fileName}
+						googleSpreadsheetId={metadata.googleSpreadsheetId}
 					/>
 					<Button
 						variant="outline"
